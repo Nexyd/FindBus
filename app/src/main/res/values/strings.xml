@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">FindBus</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="btn_show_map">Mostrar mapa</string>
 </resources>
