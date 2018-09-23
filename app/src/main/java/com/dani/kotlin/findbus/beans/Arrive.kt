@@ -1,15 +1,27 @@
 package com.dani.kotlin.findbus.beans
+import com.google.gson.annotations.SerializedName
 
 class Arrive {
+
+    @SerializedName("idStop")
     var idStop: String = ""
+    @SerializedName("idLine")
     var idLine: String = ""
+    @SerializedName("isHead")
     var isHead: String = ""
-    var destination: String = ""
+    @SerializedName("idBus")
     var idBus: String = ""
+    @SerializedName("timeLeftBus")
     var timeLeftBus: String = ""
+    @SerializedName("distanceBus")
     var distanceBus: String = ""
+    @SerializedName("positionXBus")
     var positionXBus: String = ""
+    @SerializedName("positionYBus")
     var positionYBus: String = ""
+    @SerializedName("destination")
+    var destination: String = ""
+    @SerializedName("positionTypeBus")
     var positionTypeBus: String = ""
 
     fun timeInMin(): String {
@@ -23,3 +35,5 @@ class Arrive {
         return result
     }
 }
+
+abstract class Arrives : List<Arrive>

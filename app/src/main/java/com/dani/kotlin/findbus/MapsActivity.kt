@@ -8,6 +8,9 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.util.Log
+import com.dani.kotlin.findbus.beans.Arrives
+import com.dani.kotlin.findbus.beans.Stops
+import com.dani.kotlin.findbus.connection.FindBusConnector
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -41,6 +44,30 @@ class MapsActivity : AppCompatActivity(),
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
     }
 
+    override fun onMarkerClick(p0: Marker?): Boolean = false
+
+    // override fun onMarkerClick(p0: Marker?): Boolean {
+    //     TODO("not implemented")
+    // }
+
+    /**
+     * Manipulates the map once available.
+     * This callback is triggered when the map is ready to be used.
+     * This is where we can add markers or lines, add listeners or move the camera. In this case,
+     * we just add a marker near Sydney, Australia.
+     * If Google Play services is not installed on the device, the user will be prompted to install
+     * it inside the SupportMapFragment. This method will only be triggered once the user has
+     * installed Google Play services and returned to the app.
+     */
+    override fun onMapReady(googleMap: GoogleMap) {
+        map = googleMap
+
+        // TODO("Search for the Kotlin synthetic properties usage")
+        map.getUiSettings().setZoomControlsEnabled(true)
+        map.setOnMarkerClickListener(this)
+        setUpMap()
+    }
+
     private fun checkPermission() {
         if (ActivityCompat.checkSelfPermission(this,
             android.Manifest.permission.ACCESS_FINE_LOCATION) !=
@@ -61,42 +88,38 @@ class MapsActivity : AppCompatActivity(),
             if (location != null) {
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
-                val markerLatLng  = LatLng(location.latitude - 0.001, location.longitude + 0.001)
-                placeMarkerOnMap(markerLatLng)
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
+
+                printMarkers(location.latitude, location.longitude)
             }
         }
     }
 
-//    override fun onMarkerClick(p0: Marker?): Boolean {
-//        TODO("not implemented")
-//    }
+    private fun printMarkers(x: Double, y: Double) {
+        val connector = FindBusConnector()
+        val stops: Stops = connector.getStopsFromXY(x, y)
 
-    override fun onMarkerClick(p0: Marker?): Boolean = false
+        for (stop in stops) {
+            val arrives: Arrives = connector
+                .getArriveStop(stop.idStop)
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    override fun onMapReady(googleMap: GoogleMap) {
-        map = googleMap
-
-        // TODO("Search for the Kotlin synthetic properties usage")
-        map.getUiSettings().setZoomControlsEnabled(true)
-        map.setOnMarkerClickListener(this)
-        setUpMap()
+            placeMarkerOnMap(LatLng(
+                stop.coordinateX.toDouble(),
+                stop.coordinateY.toDouble()
+            ), arrives)
+        }
     }
 
-    private fun placeMarkerOnMap(location: LatLng) {
+    private fun placeMarkerOnMap(location: LatLng, stopData: Arrives) {
         val markerOptions = MarkerOptions().position(location)
         val titleStr = getAddress(location)
         markerOptions.title(titleStr)
         map.addMarker(markerOptions)
+
+        // TODO: Create InfoWindow (Show bus/stop data)
+        // TODO: Calculate route from user to mark
+        // TODO: (Optional) Add custom icon to mark
+        // TODO: Add click listener for this events
 
         // map.moveCamera(CameraUpdateFactory.newLatLng(location))
         // markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
