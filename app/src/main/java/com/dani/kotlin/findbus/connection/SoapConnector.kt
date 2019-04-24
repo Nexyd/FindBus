@@ -84,11 +84,11 @@ class SoapConnector {
         println("SOAP Request "  + httpTransportSE.requestDump)
         println("SOAP Response " + httpTransportSE.responseDump)
 
-        if (envelope.response != null)
-            response = envelope.response as SoapObject
-        else
-            // Show error message
-            response = SoapObject()
+        response = when {
+            (envelope.response != null) ->
+                envelope.response as SoapObject
+            else -> SoapObject()
+        }
 
         return response
     }
