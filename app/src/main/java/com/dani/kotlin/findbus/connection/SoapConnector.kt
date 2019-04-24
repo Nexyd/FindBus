@@ -76,7 +76,6 @@ class SoapConnector {
         httpTransportSE.debug = true
 
         val soapAction = TARGET_NAMESPACE + OPERATION_NAME
-        // httpTransportSE.call(soapAction, envelope)
         GlobalScope.launch(Dispatchers.Main) {
             httpTransportSE.call(soapAction, envelope)
         }
