@@ -10,7 +10,7 @@ import android.support.v4.app.ActivityCompat
 import android.util.Log
 import com.dani.kotlin.findbus.beans.Arrives
 import com.dani.kotlin.findbus.beans.Stops
-import com.dani.kotlin.findbus.connection.FindBusConnector
+import com.dani.kotlin.findbus.connection.SoapConnector
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -87,19 +87,20 @@ class MapsActivity : AppCompatActivity(),
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
             if (location != null) {
                 lastLocation = location
-                val currentLatLng = LatLng(location.latitude, location.longitude)
+                //val currentLatLng = LatLng(location.latitude, location.longitude)
+                val currentLatLng = LatLng(location.longitude, location.latitude)
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
-                printMarkers(location.latitude, location.longitude)
+                printMarkers(location.longitude, location.latitude)
             }
         }
     }
 
     private fun printMarkers(x: Double, y: Double) {
-        val connector = FindBusConnector()
-        val stops: Stops = connector.getStopsFromXY(x, y)
+        val connector = SoapConnector()
+        val stops: Stops = connector.getStopsFromXY(x, y, 400.0)
 
-        for (stop in stops) {
+        for (stop in stops.elements) {
             val arrives: Arrives = connector
                 .getArriveStop(stop.idStop)
 
@@ -110,7 +111,7 @@ class MapsActivity : AppCompatActivity(),
         }
     }
 
-    private fun placeMarkerOnMap(location: LatLng, stopData: Arrives) {
+    private fun placeMarkerOnMap(location: LatLng, arrives: Arrives) {
         val markerOptions = MarkerOptions().position(location)
         val titleStr = getAddress(location)
         markerOptions.title(titleStr)

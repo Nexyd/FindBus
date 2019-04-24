@@ -1,20 +1,30 @@
 package com.dani.kotlin.findbus.beans
-import com.google.gson.annotations.SerializedName
 
-class Stop {
+import org.ksoap2.serialization.SoapObject
 
-    @SerializedName("idStop")
+class Stop(response: SoapObject) {
+
+    var responseCode: String = ""
+    var responseMessage: String = ""
     var idStop: String = ""
-    @SerializedName("pmv")
     var pmv: String = ""
-    @SerializedName("name")
     var name: String = ""
-    @SerializedName("postalAdress")
     var postalAdress: String = ""
-    @SerializedName("coordinateX")
     var coordinateX: String = ""
-    @SerializedName("coordinateY")
     var coordinateY: String = ""
-}
+    var line: Line
 
-abstract class Stops : List<Stop>
+    init {
+        responseCode = response.getPrimitivePropertyAsString("ResponseCode")
+        responseMessage = response.getPrimitivePropertyAsString("Message")
+
+        idStop = response.getPropertyAsString("IdStop")
+        pmv = response.getPropertyAsString("PMV")
+        name = response.getPropertyAsString("Name")
+        postalAdress = response.getPropertyAsString("PostalAdress")
+        coordinateX = response.getPropertyAsString("CoordinateX")
+        coordinateY = response.getPropertyAsString("CoordinateY")
+
+        line = Line(response)
+    }
+}

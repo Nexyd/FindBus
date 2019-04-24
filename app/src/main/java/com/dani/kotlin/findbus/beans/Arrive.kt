@@ -1,28 +1,37 @@
 package com.dani.kotlin.findbus.beans
-import com.google.gson.annotations.SerializedName
 
-class Arrive {
+import org.ksoap2.serialization.SoapObject
 
-    @SerializedName("idStop")
+class Arrive(response: SoapObject) {
+
+    var responseCode: String = ""
+    var responseMessage: String = ""
     var idStop: String = ""
-    @SerializedName("idLine")
     var idLine: String = ""
-    @SerializedName("isHead")
     var isHead: String = ""
-    @SerializedName("idBus")
-    var idBus: String = ""
-    @SerializedName("timeLeftBus")
-    var timeLeftBus: String = ""
-    @SerializedName("distanceBus")
-    var distanceBus: String = ""
-    @SerializedName("positionXBus")
-    var positionXBus: String = ""
-    @SerializedName("positionYBus")
-    var positionYBus: String = ""
-    @SerializedName("destination")
     var destination: String = ""
-    @SerializedName("positionTypeBus")
+    var idBus: String = ""
+    var timeLeftBus: String = ""
+    var distanceBus: String = ""
+    var positionXBus: String = ""
+    var positionYBus: String = ""
     var positionTypeBus: String = ""
+
+    init {
+        responseCode = response.getPrimitivePropertyAsString("ResponseCode")
+        responseMessage = response.getPrimitivePropertyAsString("Message")
+
+        idStop = response.getPropertyAsString("IdStop")
+        idLine = response.getPropertyAsString("idLine")
+        isHead = response.getPropertyAsString("IsHead")
+        destination = response.getPropertyAsString("Destination")
+        idBus = response.getPropertyAsString("IdBus")
+        timeLeftBus = response.getPropertyAsString("TimeLeftBus")
+        distanceBus = response.getPropertyAsString("DistanceBus")
+        positionXBus = response.getPropertyAsString("PositionXBus")
+        positionYBus = response.getPropertyAsString("PositionYBus")
+        positionTypeBus = response.getPropertyAsString("PositionTypeBus")
+    }
 
     fun timeInMin(): String {
         val time = timeLeftBus.toInt() / 60
@@ -35,5 +44,3 @@ class Arrive {
         return result
     }
 }
-
-abstract class Arrives : List<Arrive>
