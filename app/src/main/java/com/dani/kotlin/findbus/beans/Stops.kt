@@ -7,6 +7,7 @@ class Stops(response: SoapObject) {
 
     init {
         elements = mutableListOf()
+
         for (i in 3..response.propertyCount) {
             val stopSoapObject = response.getProperty("Stop") as SoapObject
             val stop = Stop(stopSoapObject)

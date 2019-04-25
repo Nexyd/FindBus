@@ -12,7 +12,7 @@ class Stop(response: SoapObject) {
     var postalAdress: String = ""
     var coordinateX: String = ""
     var coordinateY: String = ""
-    var line: Line
+    //var line: Line
 
     init {
         responseCode = response.getPrimitivePropertyAsString("ResponseCode")
@@ -25,6 +25,6 @@ class Stop(response: SoapObject) {
         coordinateX = response.getPropertyAsString("CoordinateX")
         coordinateY = response.getPropertyAsString("CoordinateY")
 
-        line = Line(response)
+        //line = Line(response)
     }
 }

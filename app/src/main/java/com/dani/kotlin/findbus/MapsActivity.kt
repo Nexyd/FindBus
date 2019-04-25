@@ -21,6 +21,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import io.reactivex.disposables.CompositeDisposable
 import java.io.IOException
 
 class MapsActivity : AppCompatActivity(),
@@ -32,16 +33,26 @@ class MapsActivity : AppCompatActivity(),
     private lateinit var lastLocation: Location
 
     companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        val COMPOSITE_DISPOSABLE = CompositeDisposable()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+        val mapFragment = supportFragmentManager.
+            findFragmentById(R.id.map) as SupportMapFragment
+
         mapFragment.getMapAsync(this)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClient = LocationServices
+            .getFusedLocationProviderClient(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        COMPOSITE_DISPOSABLE.dispose()
     }
 
     override fun onMarkerClick(p0: Marker?): Boolean = false
@@ -68,30 +79,21 @@ class MapsActivity : AppCompatActivity(),
         setUpMap()
     }
 
-    private fun checkPermission() {
+    private fun setUpMap() {
         if (ActivityCompat.checkSelfPermission(this,
-            android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+            android.Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED)
         {
-            ActivityCompat.requestPermissions(this,
-                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE)
+            map.isMyLocationEnabled = true
+            fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+                if (location != null) {
+                    lastLocation = location
+                    //val currentLatLng = LatLng(location.latitude, location.longitude)
+                    val currentLatLng = LatLng(location.longitude, location.latitude)
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
 
-            return
-        }
-    }
-
-    private fun setUpMap() {
-        checkPermission()
-        map.isMyLocationEnabled = true
-        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-            if (location != null) {
-                lastLocation = location
-                //val currentLatLng = LatLng(location.latitude, location.longitude)
-                val currentLatLng = LatLng(location.longitude, location.latitude)
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
-
-                printMarkers(location.longitude, location.latitude)
+                    printMarkers(location.longitude, location.latitude)
+                }
             }
         }
     }

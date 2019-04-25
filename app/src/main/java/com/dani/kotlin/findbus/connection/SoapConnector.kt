@@ -1,24 +1,29 @@
 package com.dani.kotlin.findbus.connection
 
+import com.dani.kotlin.findbus.MapsActivity
 import com.dani.kotlin.findbus.beans.Arrives
+import com.dani.kotlin.findbus.beans.FakeArrives
+import com.dani.kotlin.findbus.beans.FakeStops
 import com.dani.kotlin.findbus.beans.Stops
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
 import org.ksoap2.SoapEnvelope
 import org.ksoap2.serialization.SoapSerializationEnvelope
 import org.ksoap2.serialization.SoapObject
 import org.ksoap2.transport.HttpTransportSE
-import com.dani.kotlin.findbus.util.MarshalDouble
-import kotlinx.coroutines.*
 import org.ksoap2.serialization.MarshalFloat
-import kotlin.concurrent.thread
 
 class SoapConnector {
-    private lateinit var OPERATION_NAME: String
+    private lateinit var operationName: String
     private val user = "WEB.SERV.dani_morato_19@hotmail.com"
     private val pass = "655362EA-55F9-4236-AC14-729FBC7B659C"
-    private var TARGET_NAMESPACE =
-        "https://servicios.emtmadrid.es:8443/geo/servicegeo.asmx/"
+    private val ENDPOINT = "https://servicios.emtmadrid.es" +
+        ":8443/geo/servicegeo.asmx/"
 
-    fun buildEnvelopObject(): SoapSerializationEnvelope {
+    private fun buildEnvelopObject(): SoapSerializationEnvelope {
         val envelope = SoapSerializationEnvelope(SoapEnvelope.VER12)
         envelope.dotNet = true
         envelope.implicitTypes = true
@@ -30,8 +35,8 @@ class SoapConnector {
         return envelope
     }
 
-    fun buildBodyObject(): SoapObject {
-        val body = SoapObject(TARGET_NAMESPACE, OPERATION_NAME)
+    private fun buildBodyObject(): SoapObject {
+        val body = SoapObject(ENDPOINT, operationName)
 
         // HINT: Use a map (Map<ParamName, ParamValue>) when you have several parameters
         body.addProperty("idClient", user)
@@ -43,7 +48,8 @@ class SoapConnector {
     }
 
     fun getStopsFromXY(x: Double, y: Double, radius: Double): Stops {
-        OPERATION_NAME = "getStopsFromXY"
+        operationName = "getStopsFromXY"
+        val response: Observable<Any>
         val envelope = buildEnvelopObject()
         val body = buildBodyObject()
         val stops: Stops
@@ -53,12 +59,17 @@ class SoapConnector {
         body.addProperty("Radius", radius)
         envelope.setOutputSoapObject(body)
 
-        stops = Stops(getSoapXML(envelope))
+        //response = getSoapXML(envelope)
+        //stops = Stops(response.blockingFirst(
+        //    SoapObject()) as SoapObject)
+
+        stops = FakeStops().stops
         return stops
     }
 
     fun getArriveStop(idStop: String): Arrives {
-        OPERATION_NAME = "getArriveStop"
+        operationName = "getArriveStop"
+        val response: Observable<Any>
         val envelope = buildEnvelopObject()
         val body = buildBodyObject()
         val arrives: Arrives
@@ -66,28 +77,32 @@ class SoapConnector {
         body.addProperty("idStop", idStop)
         envelope.setOutputSoapObject(body)
 
-        arrives = Arrives(getSoapXML(envelope))
+        // response = getSoapXML(envelope)
+        // arrives = Arrives(response.blockingFirst(
+        //     SoapObject()) as SoapObject)
+
+        arrives = FakeArrives().arrives
         return arrives
     }
 
-    fun getSoapXML(envelope: SoapSerializationEnvelope): SoapObject {
-        val response: SoapObject
-        val httpTransportSE = HttpTransportSE(TARGET_NAMESPACE)
+    private fun getSoapXML(envelope: SoapSerializationEnvelope): Observable<Any> {
+        val httpTransportSE = HttpTransportSE(ENDPOINT)
         httpTransportSE.debug = true
 
-        val soapAction = TARGET_NAMESPACE + OPERATION_NAME
-        GlobalScope.launch(Dispatchers.Main) {
-            httpTransportSE.call(soapAction, envelope)
-        }
+        val soapAction = ENDPOINT + operationName
+        val response: Observable<Any> =
+            Observable.just(envelope.response)
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+
+        response.subscribeBy(
+            onNext  = { httpTransportSE.call(soapAction, envelope) },
+            onError = { it.printStackTrace() },
+            onComplete = { println(envelope.response) }
+        ).addTo(MapsActivity.COMPOSITE_DISPOSABLE)
 
         println("SOAP Request "  + httpTransportSE.requestDump)
         println("SOAP Response " + httpTransportSE.responseDump)
-
-        response = when {
-            (envelope.response != null) ->
-                envelope.response as SoapObject
-            else -> SoapObject()
-        }
 
         return response
     }
