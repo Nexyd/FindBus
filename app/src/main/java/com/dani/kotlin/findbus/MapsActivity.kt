@@ -55,11 +55,13 @@ class MapsActivity : AppCompatActivity(),
         COMPOSITE_DISPOSABLE.dispose()
     }
 
-    override fun onMarkerClick(p0: Marker?): Boolean = false
-
-    // override fun onMarkerClick(p0: Marker?): Boolean {
-    //     TODO("not implemented")
-    // }
+    override fun onMarkerClick(marker: Marker?): Boolean {
+        // TODO: Create InfoWindow (Show bus/stop data)
+        // TODO: Calculate route from user to mark
+        // TODO: (Optional) Add custom icon to mark
+        map.moveCamera(CameraUpdateFactory.newLatLng(marker?.position))
+        return false
+    }
 
     /**
      * Manipulates the map once available.
@@ -88,11 +90,11 @@ class MapsActivity : AppCompatActivity(),
             fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
                 if (location != null) {
                     lastLocation = location
-                    //val currentLatLng = LatLng(location.latitude, location.longitude)
-                    val currentLatLng = LatLng(location.longitude, location.latitude)
-                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
+                    val currentLatLng = LatLng(location.latitude, location.longitude)
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
 
-                    printMarkers(location.longitude, location.latitude)
+                    //printMarkers(location.longitude, location.latitude)
+                    printMarkers(location.latitude, location.longitude)
                 }
             }
         }
@@ -103,30 +105,21 @@ class MapsActivity : AppCompatActivity(),
         val stops: Stops = connector.getStopsFromXY(x, y, 400.0)
 
         for (stop in stops.elements) {
-            val arrives: Arrives = connector
-                .getArriveStop(stop.idStop)
+            // val arrives: Arrives = connector
+            //     .getArriveStop(stop.idStop)
 
-            placeMarkerOnMap(LatLng(
-                stop.coordinateX.toDouble(),
-                stop.coordinateY.toDouble()
-            ), arrives)
+            val position = LatLng(
+                stop.coordinateY.toDouble(),
+                stop.coordinateX.toDouble())
+
+            val markerOptions = MarkerOptions().position(
+                position).title(stop.name)//.icon(
+                // BitmapDescriptorFactory.fromBitmap(
+                // BitmapFactory.decodeResource(resources,
+                // R.mipmap.ic_user_location)))
+
+            map.addMarker(markerOptions)
         }
-    }
-
-    private fun placeMarkerOnMap(location: LatLng, arrives: Arrives) {
-        val markerOptions = MarkerOptions().position(location)
-        val titleStr = getAddress(location)
-        markerOptions.title(titleStr)
-        map.addMarker(markerOptions)
-
-        // TODO: Create InfoWindow (Show bus/stop data)
-        // TODO: Calculate route from user to mark
-        // TODO: (Optional) Add custom icon to mark
-        // TODO: Add click listener for this events
-
-        // map.moveCamera(CameraUpdateFactory.newLatLng(location))
-        // markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
-        //     BitmapFactory.decodeResource(resources, R.mipmap.ic_user_location)))
     }
 
     private fun getAddress(latLng: LatLng): String {
