@@ -33,7 +33,7 @@ class Arrive(response: SoapObject) {
         positionTypeBus = response.getPropertyAsString("PositionTypeBus")
     }
 
-    fun timeInMin(): String {
+    fun getTimeArrival(): String {
         val time = timeLeftBus.toInt() / 60
         var result: String
 

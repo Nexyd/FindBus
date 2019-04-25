@@ -8,7 +8,9 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.util.Log
+import com.dani.kotlin.findbus.beans.Arrive
 import com.dani.kotlin.findbus.beans.Arrives
+import com.dani.kotlin.findbus.beans.Stop
 import com.dani.kotlin.findbus.beans.Stops
 import com.dani.kotlin.findbus.connection.SoapConnector
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -56,10 +58,8 @@ class MapsActivity : AppCompatActivity(),
     }
 
     override fun onMarkerClick(marker: Marker?): Boolean {
-        // TODO: Create InfoWindow (Show bus/stop data)
         // TODO: Calculate route from user to mark
-        // TODO: (Optional) Add custom icon to mark
-        map.moveCamera(CameraUpdateFactory.newLatLng(marker?.position))
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(marker?.position, 17f))
         return false
     }
 
@@ -92,34 +92,89 @@ class MapsActivity : AppCompatActivity(),
                     lastLocation = location
                     val currentLatLng = LatLng(location.latitude, location.longitude)
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
-
-                    //printMarkers(location.longitude, location.latitude)
-                    printMarkers(location.latitude, location.longitude)
+                    getDataForMarkers(location.latitude, location.longitude)
                 }
             }
         }
     }
 
-    private fun printMarkers(x: Double, y: Double) {
+    private fun getDataForMarkers(x: Double, y: Double) {
         val connector = SoapConnector()
         val stops: Stops = connector.getStopsFromXY(x, y, 400.0)
 
         for (stop in stops.elements) {
-            // val arrives: Arrives = connector
-            //     .getArriveStop(stop.idStop)
+             val arrives: Arrives = connector
+                 .getArriveStop(stop.idStop)
 
             val position = LatLng(
                 stop.coordinateY.toDouble(),
                 stop.coordinateX.toDouble())
 
-            val markerOptions = MarkerOptions().position(
-                position).title(stop.name)//.icon(
-                // BitmapDescriptorFactory.fromBitmap(
-                // BitmapFactory.decodeResource(resources,
-                // R.mipmap.ic_user_location)))
-
-            map.addMarker(markerOptions)
+            placeMarkersInMap(position, stop, arrives)
         }
+    }
+
+    private fun placeMarkersInMap(
+        position: LatLng, stop: Stop, arrives: Arrives)
+    {
+        // TODO: Add line breaks to the InfoWindow
+        // TODO: (Optional) Add custom icon to mark
+        val markerOptions = MarkerOptions()
+            .position(position)
+            .title(stop.name)
+            .snippet(buildSnippetData(stop, arrives))
+//            .icon(BitmapDescriptorFactory.fromBitmap(
+//                 BitmapFactory.decodeResource(resources,
+//                 R.mipmap.ic_user_location)))
+
+        map.addMarker(markerOptions)
+    }
+
+    private fun buildSnippetData(stop: Stop,
+        arrives: Arrives): String
+    {
+        val stopLines = getStopLinesString(arrives)
+        val nextLines = arrives.elements
+        var timeLeft: String
+
+        var snippet =
+            "Parada: " + stop.idStop       + "\r\n" +
+            "Calle: "  + stop.postalAdress + "\r\n" +
+            "Lineas parada: " + stopLines  + "\r\n"
+
+        for (line in nextLines) {
+            timeLeft = when (line.getTimeArrival()) {
+                " está en la parada." ->
+                    " llegará en " + line.getTimeArrival()
+                else -> line.getTimeArrival()
+            }
+
+            snippet += "Linea: " +
+                line.idLine + " con destino " +
+                line.destination + timeLeft + "\r\n"
+        }
+
+        return snippet
+    }
+
+    private fun getStopLinesString(
+        stopLines: Arrives): String
+    {
+        val lines = mutableListOf<Arrive>()
+        lines.addAll(stopLines.elements)
+        lines.sortBy { it.idLine }
+
+        var linesString = " " + lines[0].idLine + ","
+        for (line in lines) {
+            val idLine = " " + line.idLine + ","
+            if (linesString.indexOf(idLine) == -1)
+                linesString += idLine
+        }
+
+        linesString = linesString.substring(
+            1, linesString.length - 2)
+
+        return linesString
     }
 
     private fun getAddress(latLng: LatLng): String {
