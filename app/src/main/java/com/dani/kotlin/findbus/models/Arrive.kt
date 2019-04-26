@@ -1,4 +1,4 @@
-package com.dani.kotlin.findbus.beans
+package com.dani.kotlin.findbus.models
 
 import org.ksoap2.serialization.SoapObject
 
@@ -37,9 +37,13 @@ class Arrive(response: SoapObject) {
         val time = timeLeftBus.toInt() / 60
         var result: String
 
+        result = when (time) {
+            //(time > 30) -> " más de 20 min."
+            0 -> " está en la parada."
+            else -> "$time min."
+        }
+
         if (time > 30) result = " más de 20 min."
-        if (time == 0) result = " está en la parada."
-        else result = time.toString() + " min."
 
         return result
     }

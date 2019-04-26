@@ -2,17 +2,11 @@ package com.dani.kotlin.findbus
 
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.Address
-import android.location.Geocoder
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
-import android.util.Log
-import com.dani.kotlin.findbus.beans.Arrive
-import com.dani.kotlin.findbus.beans.Arrives
-import com.dani.kotlin.findbus.beans.Stop
-import com.dani.kotlin.findbus.beans.Stops
-import com.dani.kotlin.findbus.connection.SoapConnector
+import com.dani.kotlin.findbus.adapters.MarkerDataAdapter
+import com.dani.kotlin.findbus.models.Stop
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -24,7 +18,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import io.reactivex.disposables.CompositeDisposable
-import java.io.IOException
 
 class MapsActivity : AppCompatActivity(),
     OnMapReadyCallback,
@@ -33,8 +26,10 @@ class MapsActivity : AppCompatActivity(),
     private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
+    private lateinit var data: MarkerDataAdapter
 
     companion object {
+        var userLocation = LatLng(0.0, 0.0)
         const val LOCATION_PERMISSION_REQUEST_CODE = 1
         val COMPOSITE_DISPOSABLE = CompositeDisposable()
     }
@@ -74,110 +69,63 @@ class MapsActivity : AppCompatActivity(),
      */
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
+        data = MarkerDataAdapter(this.baseContext)
 
-        // TODO("Search for the Kotlin synthetic properties usage")
-        map.getUiSettings().setZoomControlsEnabled(true)
+        map.uiSettings.isZoomControlsEnabled = true
         map.setOnMarkerClickListener(this)
+        map.setInfoWindowAdapter(data)
+
         setUpMap()
     }
 
     private fun setUpMap() {
         if (ActivityCompat.checkSelfPermission(this,
-            android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED)
+            android.Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED)
         {
             map.isMyLocationEnabled = true
             fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
                 if (location != null) {
                     lastLocation = location
+
+                    userLocation = LatLng(location.latitude, location.longitude)
                     val currentLatLng = LatLng(location.latitude, location.longitude)
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
-                    getDataForMarkers(location.latitude, location.longitude)
+
+                    getDataForMarkers()
                 }
             }
         }
     }
 
-    private fun getDataForMarkers(x: Double, y: Double) {
-        val connector = SoapConnector()
-        val stops: Stops = connector.getStopsFromXY(x, y, 400.0)
-
-        for (stop in stops.elements) {
-             val arrives: Arrives = connector
-                 .getArriveStop(stop.idStop)
-
+    private fun getDataForMarkers() {
+        for (i in 0 until data.stops.elements.size) {
+            val stop = data.stops.elements[i]
             val position = LatLng(
                 stop.coordinateY.toDouble(),
                 stop.coordinateX.toDouble())
 
-            placeMarkersInMap(position, stop, arrives)
+            placeMarkersInMap(position, stop, i)
         }
     }
 
     private fun placeMarkersInMap(
-        position: LatLng, stop: Stop, arrives: Arrives)
+        position: LatLng, stop: Stop, index: Int)
     {
         // TODO: Add line breaks to the InfoWindow
         // TODO: (Optional) Add custom icon to mark
         val markerOptions = MarkerOptions()
             .position(position)
             .title(stop.name)
-            .snippet(buildSnippetData(stop, arrives))
+//            .snippet(buildSnippetData(stop, arrives))
 //            .icon(BitmapDescriptorFactory.fromBitmap(
 //                 BitmapFactory.decodeResource(resources,
 //                 R.mipmap.ic_user_location)))
 
-        map.addMarker(markerOptions)
+        map.addMarker(markerOptions).tag = index
     }
 
-    private fun buildSnippetData(stop: Stop,
-        arrives: Arrives): String
-    {
-        val stopLines = getStopLinesString(arrives)
-        val nextLines = arrives.elements
-        var timeLeft: String
-
-        var snippet =
-            "Parada: " + stop.idStop       + "\r\n" +
-            "Calle: "  + stop.postalAdress + "\r\n" +
-            "Lineas parada: " + stopLines  + "\r\n"
-
-        for (line in nextLines) {
-            timeLeft = when (line.getTimeArrival()) {
-                " está en la parada." ->
-                    " llegará en " + line.getTimeArrival()
-                else -> line.getTimeArrival()
-            }
-
-            snippet += "Linea: " +
-                line.idLine + " con destino " +
-                line.destination + timeLeft + "\r\n"
-        }
-
-        return snippet
-    }
-
-    private fun getStopLinesString(
-        stopLines: Arrives): String
-    {
-        val lines = mutableListOf<Arrive>()
-        lines.addAll(stopLines.elements)
-        lines.sortBy { it.idLine }
-
-        var linesString = " " + lines[0].idLine + ","
-        for (line in lines) {
-            val idLine = " " + line.idLine + ","
-            if (linesString.indexOf(idLine) == -1)
-                linesString += idLine
-        }
-
-        linesString = linesString.substring(
-            1, linesString.length - 2)
-
-        return linesString
-    }
-
-    private fun getAddress(latLng: LatLng): String {
+    /*private fun getAddress(latLng: LatLng): String {
         val geocoder = Geocoder(this)
         val addresses: List<Address>?
         val address: Address?
@@ -203,5 +151,5 @@ class MapsActivity : AppCompatActivity(),
         }
 
         return addressText
-    }
+    } */
 }

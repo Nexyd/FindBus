@@ -1,6 +1,12 @@
 <resources>
     <string name="app_name">FindBus</string>
+    <string name="google_maps_key">AIzaSyBPSDMYLitGfXR61vTOXpq1NFhv9jDXDxg</string>
     <string name="title_activity_maps">Map</string>
     <string name="btn_show_map">Mostrar mapa</string>
-    <string name="google_maps_key">api_key_here</string>
+    <string name="marker_window_stop">Parada:</string>
+    <string name="marker_window_street">Calle:</string>
+    <string name="marker_window_stop_lines">Lineas parada:</string>
+    <string name="marker_window_bus_waiting"> está en la parada.</string>
+    <string name="marker_window_arrival_in"> llegará en </string>
+    <string name="marker_window_line">Linea %1$s con destino %2$s %3$s</string>
 </resources>

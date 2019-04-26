@@ -1,10 +1,10 @@
 package com.dani.kotlin.findbus.connection
 
 import com.dani.kotlin.findbus.MapsActivity
-import com.dani.kotlin.findbus.beans.Arrives
-import com.dani.kotlin.findbus.beans.FakeArrives
-import com.dani.kotlin.findbus.beans.FakeStops
-import com.dani.kotlin.findbus.beans.Stops
+import com.dani.kotlin.findbus.models.Arrives
+import com.dani.kotlin.findbus.models.FakeArrives
+import com.dani.kotlin.findbus.models.FakeStops
+import com.dani.kotlin.findbus.models.Stops
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.android.schedulers.AndroidSchedulers

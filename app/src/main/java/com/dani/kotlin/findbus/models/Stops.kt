@@ -1,4 +1,4 @@
-package com.dani.kotlin.findbus.beans
+package com.dani.kotlin.findbus.models
 
 import org.ksoap2.serialization.SoapObject
 
