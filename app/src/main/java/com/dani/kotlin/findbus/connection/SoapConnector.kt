@@ -1,6 +1,8 @@
 package com.dani.kotlin.findbus.connection
 
+import android.content.Context
 import com.dani.kotlin.findbus.MapsActivity
+import com.dani.kotlin.findbus.R
 import com.dani.kotlin.findbus.models.Arrives
 import com.dani.kotlin.findbus.models.FakeArrives
 import com.dani.kotlin.findbus.models.FakeStops
@@ -16,12 +18,17 @@ import org.ksoap2.serialization.SoapObject
 import org.ksoap2.transport.HttpTransportSE
 import org.ksoap2.serialization.MarshalFloat
 
-class SoapConnector {
+class SoapConnector(val context: Context) {
     private lateinit var operationName: String
-    private val user = "WEB.SERV.dani_morato_19@hotmail.com"
-    private val pass = "655362EA-55F9-4236-AC14-729FBC7B659C"
-    private val ENDPOINT = "https://servicios.emtmadrid.es" +
-        ":8443/geo/servicegeo.asmx/"
+    private val username: String
+    private val password: String
+    private val ENDPOINT: String
+
+    init {
+        username = context.getString(R.string.web_api_username)
+        password = context.getString(R.string.web_api_password)
+        ENDPOINT = context.getString(R.string.web_api_endpoint)
+    }
 
     private fun buildEnvelopObject(): SoapSerializationEnvelope {
         val envelope = SoapSerializationEnvelope(SoapEnvelope.VER12)
@@ -29,6 +36,7 @@ class SoapConnector {
         envelope.implicitTypes = true
         envelope.isAddAdornments = false
         envelope.encodingStyle = SoapSerializationEnvelope.XSD
+
         val marshal = MarshalFloat()
         marshal.register(envelope)
 
@@ -39,8 +47,8 @@ class SoapConnector {
         val body = SoapObject(ENDPOINT, operationName)
 
         // HINT: Use a map (Map<ParamName, ParamValue>) when you have several parameters
-        body.addProperty("idClient", user)
-        body.addProperty("passKey",  pass)
+        body.addProperty("idClient", username)
+        body.addProperty("passKey",  password)
         body.addProperty("statistics",  "")
         body.addProperty("cultureInfo", "ES")
 
