@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import com.dani.kotlin.findbus.adapters.MarkerDataAdapter
-import com.dani.kotlin.findbus.models.Stop
+import com.dani.kotlin.findbus.connection.DirectionsService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -14,10 +14,12 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MapsActivity : AppCompatActivity(),
     OnMapReadyCallback,
@@ -27,6 +29,8 @@ class MapsActivity : AppCompatActivity(),
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
     private lateinit var data: MarkerDataAdapter
+    private lateinit var directions: DirectionsService
+    private lateinit var mapPolylines: MutableList<Polyline>
 
     companion object {
         var userLocation = LatLng(0.0, 0.0)
@@ -37,11 +41,14 @@ class MapsActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+        checkPermission()
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager.
             findFragmentById(R.id.map) as SupportMapFragment
 
+        mapPolylines = mutableListOf()
+        directions = DirectionsService(baseContext)
         mapFragment.getMapAsync(this)
         fusedLocationClient = LocationServices
             .getFusedLocationProviderClient(this)
@@ -52,9 +59,36 @@ class MapsActivity : AppCompatActivity(),
         COMPOSITE_DISPOSABLE.dispose()
     }
 
+    private fun checkPermission() {
+        if (ActivityCompat.checkSelfPermission(this,
+            android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE)
+
+            // TODO: Prevent the exception occuring when the map has not been initialized
+            //if (::map.isInitialized)
+                map.clear()
+        }
+    }
+
     override fun onMarkerClick(marker: Marker?): Boolean {
-        // TODO: Calculate route from user to mark
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(marker?.position, 17f))
+        for (polyline in mapPolylines)
+            polyline.remove()
+
+        // TODO: Call calculateRoute() asynchronously
+        val options = directions.calculateRoute(
+            userLocation, marker?.position,
+            DirectionsService.WALKING)
+
+        for (option in options)
+            mapPolylines.add(map.addPolyline(option))
+
+        map.animateCamera(CameraUpdateFactory
+            .newLatLngZoom(marker?.position, 17f))
+
         return false
     }
 
@@ -105,19 +139,16 @@ class MapsActivity : AppCompatActivity(),
                 stop.coordinateY.toDouble(),
                 stop.coordinateX.toDouble())
 
-            placeMarkersInMap(position, stop, i)
+            placeMarkersInMap(position, i)
         }
     }
 
     private fun placeMarkersInMap(
-        position: LatLng, stop: Stop, index: Int)
+        position: LatLng, index: Int)
     {
-        // TODO: Add line breaks to the InfoWindow
         // TODO: (Optional) Add custom icon to mark
         val markerOptions = MarkerOptions()
             .position(position)
-            .title(stop.name)
-//            .snippet(buildSnippetData(stop, arrives))
 //            .icon(BitmapDescriptorFactory.fromBitmap(
 //                 BitmapFactory.decodeResource(resources,
 //                 R.mipmap.ic_user_location)))

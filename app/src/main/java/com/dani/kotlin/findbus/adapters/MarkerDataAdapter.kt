@@ -38,11 +38,13 @@ class MarkerDataAdapter(val context: Context)
             R.layout.marker_info_window, null)
 
         val layout = markerView.findViewById<LinearLayout>(R.id.dataLayout)
+        val name = markerView.findViewById<TextView>(R.id.name)
         val stop = markerView.findViewById<TextView>(R.id.idStopValue)
         val street = markerView.findViewById<TextView>(R.id.streetValue)
         val stopLines = markerView.findViewById<TextView>(R.id.idStopLinesValue)
 
         val index = marker?.tag as Int
+        name.text = stops.elements[index].name
         stop.text = stops.elements[index].idStop
         street.text = stops.elements[index].postalAdress
         stopLines.text = getStopLinesString(index)
@@ -66,7 +68,6 @@ class MarkerDataAdapter(val context: Context)
         textView.text = context.getString(
             R.string.marker_window_line, arrive.idLine,
             arrive.destination, timeLeft)
-
         return textView
     }
 
@@ -74,17 +75,17 @@ class MarkerDataAdapter(val context: Context)
     {
         val lines = mutableListOf<Arrive>()
         lines.addAll(arrives[index].elements)
-        lines.sortBy { it.idLine }
+        lines.sortedBy { it.idLine }
 
-        var linesString = " " + lines[0].idLine + ","
+        var linesString = lines.elementAt(0).idLine + ","
         for (line in lines) {
             val idLine = " " + line.idLine + ","
-            if (linesString.indexOf(idLine) == -1)
+            if (linesString.indexOf(line.idLine) == -1)
                 linesString += idLine
         }
 
         linesString = linesString.substring(
-            1, linesString.length - 2)
+            0, linesString.length - 1)
 
         return linesString
     }
