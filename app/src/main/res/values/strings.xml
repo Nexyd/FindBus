@@ -14,6 +14,5 @@
     <string name="maps_directions_parameters">origin=%1$s&amp;destination=%2$s&amp;mode=%3$s&amp;key=%4$s</string>
     <string name="web_api_username">username_here</string>
     <string name="web_api_password">password_here</string>
-    <string name="web_api_endpoint">https://servicios.emtmadrid.es:8443/geo/servicegeo.asmx/</string>
-
+    <string name="web_api_endpoint">https://servicios.emtmadrid.es:8443/geo/servicegeo.asmx</string>
 </resources>

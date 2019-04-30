@@ -15,11 +15,6 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import io.reactivex.disposables.CompositeDisposable
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MapsActivity : AppCompatActivity(),
     OnMapReadyCallback,
@@ -35,7 +30,6 @@ class MapsActivity : AppCompatActivity(),
     companion object {
         var userLocation = LatLng(0.0, 0.0)
         const val LOCATION_PERMISSION_REQUEST_CODE = 1
-        val COMPOSITE_DISPOSABLE = CompositeDisposable()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,11 +46,6 @@ class MapsActivity : AppCompatActivity(),
         mapFragment.getMapAsync(this)
         fusedLocationClient = LocationServices
             .getFusedLocationProviderClient(this)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        COMPOSITE_DISPOSABLE.dispose()
     }
 
     private fun checkPermission() {
@@ -103,16 +92,13 @@ class MapsActivity : AppCompatActivity(),
      */
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        data = MarkerDataAdapter(this.baseContext)
-
         map.uiSettings.isZoomControlsEnabled = true
         map.setOnMarkerClickListener(this)
-        map.setInfoWindowAdapter(data)
 
-        setUpMap()
+        getUserLocation()
     }
 
-    private fun setUpMap() {
+    private fun getUserLocation() {
         if (ActivityCompat.checkSelfPermission(this,
             android.Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED)
@@ -121,10 +107,14 @@ class MapsActivity : AppCompatActivity(),
             fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
                 if (location != null) {
                     lastLocation = location
+                    userLocation = LatLng(
+                        location.latitude,
+                        location.longitude)
 
-                    userLocation = LatLng(location.latitude, location.longitude)
-                    val currentLatLng = LatLng(location.latitude, location.longitude)
-                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
+                    data = MarkerDataAdapter(this.baseContext)
+                    map.setInfoWindowAdapter(data)
+                    map.animateCamera(CameraUpdateFactory
+                        .newLatLngZoom(userLocation, 17f))
 
                     getDataForMarkers()
                 }

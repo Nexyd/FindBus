@@ -14,14 +14,14 @@ import com.dani.kotlin.findbus.models.Stops
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Marker
 
-class MarkerDataAdapter(val context: Context)
+class MarkerDataAdapter(private val context: Context)
     : GoogleMap.InfoWindowAdapter
 {
     private val arrives: List<Arrives>
     val stops: Stops
 
     init {
-        val connector = SoapConnector()
+        val connector = SoapConnector(context)
         stops = connector.getStopsFromXY(
             MapsActivity.userLocation.latitude,
             MapsActivity.userLocation.longitude,
