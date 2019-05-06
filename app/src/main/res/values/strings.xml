@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">FindBus</string>
-    <string name="google_maps_android_key">api_key_here</string>
-    <string name="google_maps_json_key">api_key_here</string>
+    <string name="google_maps_android_key">AIzaSyBPSDMYLitGfXR61vTOXpq1NFhv9jDXDxg</string>
+    <string name="google_maps_json_key">AIzaSyCvHIJcBOgJSWmXrIGQGEzkS0B66yI-Drg</string>
     <string name="title_activity_maps">Map</string>
     <string name="btn_show_map">Mostrar mapa</string>
     <string name="marker_window_stop">Parada:</string>
@@ -12,7 +12,10 @@
     <string name="marker_window_line">Linea %1$s con destino %2$s %3$s</string>
     <string name="maps_directions_api">https://maps.googleapis.com/maps/api/directions/json?%1$s</string>
     <string name="maps_directions_parameters">origin=%1$s&amp;destination=%2$s&amp;mode=%3$s&amp;key=%4$s</string>
-    <string name="web_api_username">username_here</string>
-    <string name="web_api_password">password_here</string>
+    <string name="web_api_username">WEB.SERV.dani_morato_19@hotmail.com</string>
+    <!-- TODO: Investigate why changing '-' to '&#8211; as speficied by Android Studio causes the WS to return invalid pwd -->
+    <string name="web_api_password">655362EA-55F9-4236-AC14-729FBC7B659C</string>
+    <!--<string name="web_api_password">655362EA&#8211;55F9&#8211;4236&#8211;AC14&#8211;729FBC7B659C</string>-->
     <string name="web_api_endpoint">https://servicios.emtmadrid.es:8443/geo/servicegeo.asmx</string>
+    <string name="web_api_soap_action">http://tempuri.org/</string>
 </resources>
