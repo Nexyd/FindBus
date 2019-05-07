@@ -26,11 +26,12 @@ class SoapConnector(context: Context) {
     }
 
     private fun buildEnvelopObject(): SoapSerializationEnvelope {
-        val envelope = SoapSerializationEnvelope(SoapEnvelope.VER12)
+        val envelope = SoapSerializationEnvelope(SoapEnvelope.VER12 )
         envelope.dotNet = true
         envelope.implicitTypes = true
         envelope.isAddAdornments = false
         envelope.encodingStyle = SoapSerializationEnvelope.XSD
+        //envelope.enc = "UTF-8"
 
         val marshal = MarshalFloat()
         marshal.register(envelope)
@@ -75,15 +76,22 @@ class SoapConnector(context: Context) {
     }
 
     private fun getSoapXML(envelope: SoapSerializationEnvelope): SoapObject {
-        val httpTransportSE = HttpTransportSE(ENDPOINT)
+        val httpTransportSE = HttpTransportSE(ENDPOINT, 15000)
         val soapAction = "$NAMESPACE$operationName"
         httpTransportSE.debug = true
 
         // TODO: Investigate why using coordinates outside the community of madrid it yields an empty array (no stops around)
         // TODO: But if coordinates inside the community of madrid are used it yields null (when it should be backwards)
+        // TODO: Possibility that it's reaching a timeout on okhttp
         doAsync { httpTransportSE.call(soapAction, envelope) }
 
-        //return envelope.bodyIn as SoapObject
-        return envelope.response as SoapObject
+        println(envelope.response)
+        println(envelope.bodyIn)
+        println(httpTransportSE.responseDump)
+
+        return when(envelope.bodyIn) { //envelope.response
+            null -> SoapObject()
+            else -> envelope.bodyIn as SoapObject
+        }
     }
 }

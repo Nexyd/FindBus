@@ -23,8 +23,8 @@ class MarkerDataAdapter(private val context: Context)
     init {
         val connector = SoapConnector(context)
         stops = connector.getStopsFromXY(
-            MapsActivity.userLocation.latitude,
             MapsActivity.userLocation.longitude,
+            MapsActivity.userLocation.latitude,
             400.0)
 
         arrives = mutableListOf()
